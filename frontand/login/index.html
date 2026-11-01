@@ -1,0 +1,66 @@
+
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <title>Login - Presensi UMKM</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/login/style.css">
+</head>
+<body>
+    <span class="blob b1" aria-hidden="true"></span>
+    <span class="blob b2" aria-hidden="true"></span>
+
+    <main class="wrap">
+        <div class="logo" aria-hidden="true">⚡</div>
+
+        <h1>Presensi UMKM</h1>
+        <p class="sub">Login dulu biar bisa absen</p>
+
+        <form id="loginForm" class="card" novalidate>
+            <label for="username">Username</label>
+
+            <input
+                id="username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="Masukkan username"
+            >
+
+            <label for="password">Password</label>
+
+            <div class="pw">
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Masukkan password"
+                >
+
+                <button
+                    type="button"
+                    id="toggle"
+                    class="eye"
+                    aria-label="Tampilkan password"
+                >👁️</button>
+            </div>
+
+            <p id="error" class="error" role="alert" aria-live="polite"></p>
+
+            <button type="submit" id="btn" class="btn">
+                Login
+            </button>
+        </form>
+    </main>
+
+    <script src="/login/login.js"></script>
+</body>
+</html>

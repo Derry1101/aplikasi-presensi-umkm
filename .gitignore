@@ -2,4 +2,11 @@ node_modules/
 .env
 .env.*
 !.env.example
+
 uploads/
+
+.vscode/
+*.session.sql
+
+.DS_Store
+Thumbs.db
