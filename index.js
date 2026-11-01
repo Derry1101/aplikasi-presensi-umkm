@@ -7,19 +7,33 @@ import e from "express";
 import { authMiddleware } from "../middlewere/authMiddleware.js";
 import { roleMiddleware } from "../middlewere/roleMiddleware.js";
 import upload from "./uploads.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const PORT = 3000;
 
-// Membaca data JSON dari request
-app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Endpoint untuk mengecek server
+const folderFrontand = path.resolve(__dirname, "../frontand");
+
+
+app.use(express.json());
+
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
+app.use("/admin", express.static(path.join(folderFrontand, "admin")));
+app.use("/karyawan", express.static(path.join(folderFrontand, "karyawan")));
+
+
+app.use(express.static(folderFrontand));
+
+
 app.get("/", (req, res) => {
-  res.json({
-    message: "Backend aplikasi presensi berjalan!"
-  });
+    res.sendFile(path.join(folderFrontand, "login", "index.html"));
 });
 
 app.get("/test-db", async (req, res) =>{
