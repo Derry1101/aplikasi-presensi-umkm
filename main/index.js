@@ -36,51 +36,6 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(folderFrontand, "login", "index.html"));
 });
 
-app.get("/test-db", async (req, res) =>{
-  try {
-    const users = await prisma.user.findMany();
-
-    res.json({
-      message: "koneksi database berhasil",
-      jumlahUser: users.length,
-      users: users.map((user)=>({
-        id: user.id,
-        username: user.username,
-        password: user.password,
-        nama: user.nama,
-        role: user.role
-      }))
-    })
-  } catch (error) {
-      console.error(error)
-      res.status(500)({
-        message: "gagal membaca database"
-      })
-  }
-})
-
-app.get("/buat-user",  async (req, res)=>{
-  try {
-    
-    const user = await prisma.user.create({
-      data: {
-        username: "liliee143",
-        nama: "lilii",
-        password: "143"
-        
-      }
-    })
-
-    res.json({message:"data berhasil di buat"})
-
-  } catch (error) {
-    console.error(error)
-      res.status(500)({
-        message: "gagal membuat user"
-      })
-  }
-})
-
 
 app.get("/api/users", authMiddleware, async (req, res) => {
   try {

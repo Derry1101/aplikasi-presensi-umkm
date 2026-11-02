@@ -1,9 +1,7 @@
 
-const API_URL = "";
-
 const TUJUAN = {
-    admin: "/admin/",
-    karyawan: "/karyawan/"
+  admin: "/admin/",
+  karyawan: "/karyawan/"
 };
 
 const $ = (id) => document.getElementById(id);
@@ -15,87 +13,84 @@ const errEl = $("error");
 const btn = $("btn");
 
 function showError(message, ...fields) {
-    errEl.textContent = message;
+  errEl.textContent = message;
 
-    [userEl, passEl].forEach((field) => {
-        field.classList.toggle("invalid", fields.includes(field));
-    });
+  [userEl, passEl].forEach((field) => {
+    field.classList.toggle("invalid", fields.includes(field));
+  });
 }
 
 $("toggle").addEventListener("click", () => {
-    const hide = passEl.type === "password";
+  const sembunyi = passEl.type === "password";
 
-    passEl.type = hide ? "text" : "password";
+  passEl.type = sembunyi ? "text" : "password";
 
-    $("toggle").setAttribute(
-        "aria-label",
-        hide ? "Sembunyikan password" : "Tampilkan password"
-    );
+  $("toggle").setAttribute(
+    "aria-label",
+    sembunyi ? "Sembunyikan password" : "Tampilkan password"
+  );
 });
 
 async function cekLogin(username, password) {
-    let response;
+  let response;
 
-    try {
-        response = await fetch(`${API_URL}/api/auth/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username,
-                password
-            })
-        });
-    } catch {
-        throw new Error("Tidak dapat terhubung ke server.");
-    }
+  try {
+    response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    });
+  } catch {
+    throw new Error("Tidak dapat terhubung ke server.");
+  }
 
-    const data = await response.json().catch(() => ({}));
+  const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-        throw new Error(data.message || "Username atau password salah.");
-    }
+  if (!response.ok) {
+    throw new Error(data.message || "Username atau password salah.");
+  }
 
-    return data;
+  return data;
 }
 
 form.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    const username = userEl.value.trim();
-    const password = passEl.value;
+  const username = userEl.value.trim();
+  const password = passEl.value;
 
-    if (!username || !password) {
-        showError(
-            "Username dan password wajib diisi.",
-            ...(!username ? [userEl] : []),
-            ...(!password ? [passEl] : [])
-        );
-        return;
+  if (!username || !password) {
+    showError(
+      "Username dan password wajib diisi.",
+      ...(!username ? [userEl] : []),
+      ...(!password ? [passEl] : [])
+    );
+    return;
+  }
+
+  showError("");
+  btn.disabled = true;
+  btn.textContent = "Memproses...";
+
+  try {
+    const data = await cekLogin(username, password);
+    const { token, user } = data;
+
+    if (!token || !user || !TUJUAN[user.role]) {
+      throw new Error("Data login atau role tidak valid.");
     }
 
-    showError("");
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("user", JSON.stringify(user));
 
-    btn.disabled = true;
-    btn.textContent = "Memproses...";
+    location.href = TUJUAN[user.role];
+  } catch (error) {
+    showError(error.message, userEl, passEl);
 
-    try {
-        const { token, user } = await cekLogin(username, password);
-
-        if (!token || !user || !TUJUAN[user.role]) {
-            throw new Error("Data login atau role tidak valid.");
-        }
-
-        sessionStorage.setItem("token", token);
-        sessionStorage.setItem("user", JSON.stringify(user));
-
-        window.location.href = TUJUAN[user.role];
-    } catch (error) {
-        showError(error.message, userEl, passEl);
-
-        btn.disabled = false;
-        btn.textContent = "Login";
-        passEl.select();
-    }
+    btn.disabled = false;
+    btn.textContent = "Login";
+    passEl.select();
+  }
 });
