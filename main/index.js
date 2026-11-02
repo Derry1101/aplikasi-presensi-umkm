@@ -1145,7 +1145,62 @@ app.get("/api/presensi/rekap", authMiddleware, async (req, res) => {
   }
 });
 
+app.put("/api/admin/profil", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Akses hanya untuk Admin"
+      });
+    }
 
+    const { nama, password } = req.body;
+
+    if (!nama || !nama.trim()) {
+      return res.status(400).json({
+        message: "Nama tidak boleh kosong"
+      });
+    }
+
+    const dataUpdate = {
+      nama: nama.trim()
+    };
+
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({
+          message: "Password minimal 6 karakter"
+        });
+      }
+
+      dataUpdate.password = await bcrypt.hash(password, 10);
+    }
+
+    const admin = await prisma.user.update({
+      where: {
+        id: req.user.id
+      },
+      data: dataUpdate,
+      select: {
+        id: true,
+        username: true,
+        nama: true,
+        role: true
+      }
+    });
+
+    res.status(200).json({
+      message: "Profil berhasil diperbarui",
+      data: admin
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Profil gagal diperbarui"
+    });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
