@@ -1,5 +1,5 @@
 
-const API = "";
+const API = "http://43.157.206.194:3000";
 
 const token = sessionStorage.getItem("token");
 const user = JSON.parse(sessionStorage.getItem("user") || "null");
@@ -264,16 +264,24 @@ async function detail(userId, tanggal) {
 
     const item = data.data;
 
-    const fotoBox = (url, jam, label) => `
-      <div class="selfie">
-        ${
-          url
-            ? `<img src="${esc(url)}" alt="Foto presensi ${label}" style="width:100%;height:180px;object-fit:cover;border-radius:12px">`
-            : `<div style="height:180px;display:grid;place-items:center">Foto belum tersedia</div>`
-        }
-        <small>${label} · ${esc(jam || "Belum ada foto")}</small>
-      </div>
-    `;
+    const fotoBox = (url, jam, label) => {
+      const fotoUrl = url
+        ? url.startsWith("http")
+          ? url
+          : `${API}${url.startsWith("/") ? "" : "/"}${url}`
+        : "";
+
+      return `
+        <div class="selfie">
+          ${
+            fotoUrl
+              ? `<img src="${esc(fotoUrl)}" alt="Foto presensi ${label}" style="width:100%;height:180px;object-fit:cover;border-radius:12px">`
+              : `<div style="height:180px;display:grid;place-items:center">Foto belum tersedia</div>`
+          }
+          <small>${label} · ${esc(jam || "Belum ada foto")}</small>
+        </div>
+      `;
+    };
 
     sheet(`
       <div class="row" style="padding:0;margin:0 0 12px">
