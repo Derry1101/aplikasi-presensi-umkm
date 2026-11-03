@@ -5,6 +5,7 @@ const token = sessionStorage.getItem("token");
 const user = JSON.parse(sessionStorage.getItem("user") || "null");
 
 const $ = (id) => document.getElementById(id);
+
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
   "&": "&amp;",
   "<": "&lt;",
@@ -13,7 +14,14 @@ const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
   "'": "&#39;"
 }[char]));
 
-const warna = ["var(--lime)", "var(--sky)", "var(--pink)", "var(--sun)", "var(--lil)"];
+const warna = [
+  "var(--lime)",
+  "var(--sky)",
+  "var(--pink)",
+  "var(--sun)",
+  "var(--lil)"
+];
+
 const bulanNama = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -102,6 +110,7 @@ function statusColor(status) {
     "Terlambat": "var(--sun)",
     "Izin": "var(--sky)",
     "Sakit": "var(--pink)",
+    "Alfa": "#FF8A00",
     "Belum Presensi": "var(--lil)"
   };
 
@@ -123,7 +132,7 @@ function statusEmoji(status) {
 function formatTanggal(dateString) {
   if (!dateString) return "-";
 
-  const [year, month, day] = dateString.split("-").map(Number);
+  const [year, month, day] = String(dateString).slice(0, 10).split("-").map(Number);
 
   return `${day} ${bulanNama[month - 1]} ${year}`;
 }
@@ -230,8 +239,8 @@ async function home() {
     ${
       daftar.length
         ? daftar.map((item) => `
-          <button class="bx card row" onclick="detail(${item.id}, '${data.tanggal}')">
-            ${avatar(item.nama, item.id)}
+          <button class="bx card row" onclick="detail(${item.userId || item.id}, '${data.tanggal}')">
+            ${avatar(item.nama, item.userId || item.id)}
             <div class="grow">
               <b>${esc(item.nama)}</b>
               <span>${esc(item.jabatan || "Karyawan")} · ${esc(item.jamMasuk || "Belum ada jam masuk")}</span>
@@ -254,19 +263,13 @@ async function detail(userId, tanggal) {
     );
 
     const item = data.data;
-    const fotoMasuk = item.fotoMasuk
-      ? `/uploads/${encodeURIComponent(item.fotoMasuk)}`
-      : null;
-    const fotoPulang = item.fotoPulang
-      ? `/uploads/${encodeURIComponent(item.fotoPulang)}`
-      : null;
 
     const fotoBox = (url, jam, label) => `
       <div class="selfie">
         ${
           url
-            ? `<img src="${url}" alt="Foto presensi ${label}" style="width:100%;height:180px;object-fit:cover;border-radius:12px">`
-            : "📷"
+            ? `<img src="${esc(url)}" alt="Foto presensi ${label}" style="width:100%;height:180px;object-fit:cover;border-radius:12px">`
+            : `<div style="height:180px;display:grid;place-items:center">Foto belum tersedia</div>`
         }
         <small>${label} · ${esc(jam || "Belum ada foto")}</small>
       </div>
@@ -280,12 +283,14 @@ async function detail(userId, tanggal) {
           <span>${esc(item.jabatan || "Karyawan")}</span>
           <span>${formatTanggal(item.tanggal)}</span>
         </div>
-        <span class="pill" style="background:${statusColor(item.status)}">${esc(item.status)}</span>
+        <span class="pill" style="background:${statusColor(item.status)}">
+          ${esc(item.status)}
+        </span>
       </div>
 
       <div class="selfies">
-        ${fotoBox(fotoMasuk, item.jamMasuk, "Presensi Masuk")}
-        ${fotoBox(fotoPulang, item.jamPulang, "Presensi Pulang")}
+        ${fotoBox(item.fotoMasuk, item.jamMasuk, "Presensi Masuk")}
+        ${fotoBox(item.fotoPulang, item.jamPulang, "Presensi Pulang")}
       </div>
     `);
   } catch (error) {
@@ -532,10 +537,127 @@ async function konfirmasiHapus(id) {
   }
 }
 
+function jumlahHariRekap() {
+  const sekarang = tanggalSekarang();
+  const bulanSekarang = Number(sekarang.slice(5, 7));
+  const tahunSekarang = Number(sekarang.slice(0, 4));
+
+  if (S.tahun < tahunSekarang || (S.tahun === tahunSekarang && S.bulan < bulanSekarang)) {
+    return new Date(S.tahun, S.bulan, 0).getDate();
+  }
+
+  if (S.tahun === tahunSekarang && S.bulan === bulanSekarang) {
+    return Number(sekarang.slice(8, 10));
+  }
+
+  return 0;
+}
+
+function hitungRekapKaryawan(karyawan, daftar, jumlahHari) {
+  const hasil = {
+    Hadir: 0,
+    Terlambat: 0,
+    Izin: 0,
+    Sakit: 0,
+    Alfa: 0
+  };
+
+  const tanggalTercatat = new Set();
+
+  daftar
+    .filter((item) => Number(item.userId) === Number(karyawan.id))
+    .forEach((item) => {
+      if (hasil[item.status] !== undefined) {
+        hasil[item.status]++;
+      }
+
+      tanggalTercatat.add(String(item.tanggal).slice(0, 10));
+    });
+
+  hasil.Alfa = Math.max(
+    0,
+    jumlahHari - tanggalTercatat.size
+  );
+
+  hasil.total = hasil.Hadir + hasil.Terlambat + hasil.Izin + hasil.Sakit + hasil.Alfa;
+
+  return hasil;
+}
+
+function barRekap(hasil) {
+  const total = hasil.total;
+
+  if (!total) {
+    return `<div class="seg" style="margin-top:10px"><i style="flex:1;background:var(--lil)"></i></div>`;
+  }
+
+  return `
+    <div class="seg" style="margin-top:10px">
+      ${[
+        ["Hadir", "var(--lime)"],
+        ["Terlambat", "var(--sun)"],
+        ["Izin", "var(--sky)"],
+        ["Sakit", "var(--pink)"],
+        ["Alfa", "#FF8A00"]
+      ].map(([status, color]) => `
+        ${hasil[status] ? `<i style="flex:${hasil[status]};background:${color}"></i>` : ""}
+      `).join("")}
+    </div>
+  `;
+}
+
+function kartuRekap(karyawan, hasil) {
+  const label = [
+    ["Hadir", "var(--lime)"],
+    ["Terlambat", "var(--sun)"],
+    ["Izin", "var(--sky)"],
+    ["Sakit", "var(--pink)"],
+    ["Alfa", "#FF8A00"]
+  ];
+
+  return `
+    <button class="bx card" style="display:block;width:100%;text-align:left;margin-top:12px"
+      onclick="detailRekap(${karyawan.id})">
+
+      <div class="row" style="padding:0;margin:0">
+        ${avatar(karyawan.nama, karyawan.id)}
+
+        <div class="grow">
+          <b>${esc(karyawan.nama)}</b>
+          <span>${esc(karyawan.jabatan || "Karyawan")} · Lihat rincian</span>
+        </div>
+
+        <span class="pill" style="background:var(--lil)">
+          ${hasil.total} hari
+        </span>
+      </div>
+
+      ${barRekap(hasil)}
+
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+        ${label.map(([status, color]) => `
+          <span class="pill" style="background:${color};font-size:11px">
+            ${status} ${hasil[status]}
+          </span>
+        `).join("")}
+      </div>
+    </button>
+  `;
+}
+
 async function rekap() {
-  const data = await muatRekap();
-  const ringkasan = data.ringkasan;
+  const [data, karyawan] = await Promise.all([
+    muatRekap(),
+    muatKaryawan()
+  ]);
+
   const daftar = data.daftarPresensi || [];
+  const jumlahHari = jumlahHariRekap();
+
+  const kartu = karyawan.map((item) => {
+    const hasil = hitungRekapKaryawan(item, daftar, jumlahHari);
+    return kartuRekap(item, hasil);
+  });
 
   return `
     <h1>Rekap</h1>
@@ -548,41 +670,64 @@ async function rekap() {
       <button class="bx" onclick="ubahBulan(1)">›</button>
     </div>
 
-    <div class="grid" style="margin-top:16px">
-      <div class="bx tile" style="background:var(--lime)">
-        <span>✅</span><b>${ringkasan.hadir || 0}</b>Hadir
-      </div>
-      <div class="bx tile" style="background:var(--sun)">
-        <span>⏰</span><b>${ringkasan.terlambat || 0}</b>Terlambat
-      </div>
-      <div class="bx tile" style="background:var(--sky)">
-        <span>📝</span><b>${ringkasan.izin || 0}</b>Izin
-      </div>
-      <div class="bx tile" style="background:var(--pink)">
-        <span>🤒</span><b>${ringkasan.sakit || 0}</b>Sakit
-      </div>
+    <div style="margin-top:16px">
+      ${
+        kartu.length
+          ? kartu.join("")
+          : `<div class="bx card row"><div class="grow"><b>Belum ada karyawan</b><span>Tambahkan karyawan untuk melihat rekap.</span></div></div>`
+      }
     </div>
-
-    <h2 style="margin-top:20px">Data Presensi</h2>
-
-    ${
-      daftar.length
-        ? daftar.map((item) => `
-          <div class="bx card row">
-            ${avatar(item.nama, item.userId)}
-            <div class="grow">
-              <b>${esc(item.nama)}</b>
-              <span>${formatTanggal(item.tanggal)}</span>
-              <span>${esc(item.jamMasuk || "-")} · ${esc(item.jamPulang || "-")}</span>
-            </div>
-            <span class="pill" style="background:${statusColor(item.status)}">
-              ${esc(item.status)}
-            </span>
-          </div>
-        `).join("")
-        : `<div class="bx card row"><div class="grow"><b>Belum ada data</b><span>Belum ada presensi pada bulan ini.</span></div></div>`
-    }
   `;
+}
+
+async function detailRekap(userId) {
+  try {
+    const data = await muatRekap();
+
+    const karyawan = S.karyawan.find(
+      (item) => Number(item.id) === Number(userId)
+    );
+
+    const daftar = (data.daftarPresensi || [])
+      .filter((item) => Number(item.userId) === Number(userId))
+      .sort((a, b) => String(b.tanggal).localeCompare(String(a.tanggal)));
+
+    if (!karyawan) {
+      toast("Data karyawan tidak ditemukan.");
+      return;
+    }
+
+    sheet(`
+      <div class="row" style="padding:0;margin:0 0 14px">
+        ${avatar(karyawan.nama, karyawan.id)}
+        <div class="grow">
+          <b style="font-size:20px">${esc(karyawan.nama)}</b>
+          <span>${esc(karyawan.jabatan || "Karyawan")}</span>
+          <span>${bulanNama[S.bulan - 1]} ${S.tahun}</span>
+        </div>
+      </div>
+
+      <h2>Rincian Presensi</h2>
+
+      ${
+        daftar.length
+          ? daftar.map((item) => `
+            <div class="bx card row">
+              <div class="grow">
+                <b>${formatTanggal(item.tanggal)}</b>
+                <span>Masuk ${esc(item.jamMasuk || "-")} · Pulang ${esc(item.jamPulang || "-")}</span>
+              </div>
+              <span class="pill" style="background:${statusColor(item.status)}">
+                ${esc(item.status)}
+              </span>
+            </div>
+          `).join("")
+          : `<div class="bx card row"><div class="grow"><b>Belum ada catatan</b><span>Tidak ada presensi tercatat pada periode ini.</span></div></div>`
+      }
+    `);
+  } catch (error) {
+    toast(error.message);
+  }
 }
 
 function ubahBulan(arah) {
@@ -607,21 +752,83 @@ function profil() {
       <div class="av" style="width:96px;height:96px;font-size:34px;margin:6px auto 12px;background:var(--lime)">
         ${esc(initials(user.nama || "Admin"))}
       </div>
+
       <h1 style="font-size:28px">${esc(user.nama || "Admin")}</h1>
       <p class="sub">@${esc(user.username || "")} · Admin</p>
     </div>
 
-    <h2 style="margin-top:24px">Akun</h2>
-    <div class="bx card row">
-      <div class="grow">
-        <b>Presensi UMKM</b>
-        <span>Masuk sebagai Admin</span>
-      </div>
+    <div class="bx card" style="margin-top:24px">
+      <h2>Ubah Profil</h2>
+
+      <label>Nama Admin</label>
+      <input
+        id="namaAdmin"
+        value="${esc(user.nama || "")}"
+        placeholder="Masukkan nama"
+      >
+
+      <label>Password Baru</label>
+      <input
+        id="passwordAdmin"
+        type="password"
+        placeholder="Kosongkan jika tidak ingin mengubah password"
+      >
+
+      <label>Konfirmasi Password Baru</label>
+      <input
+        id="konfirmasiPasswordAdmin"
+        type="password"
+        placeholder="Ulangi password baru"
+      >
+
+      <button class="bx btn" style="margin-top:16px" onclick="simpanProfilAdmin()">
+        Simpan Perubahan
+      </button>
     </div>
 
     <button class="bx btn alt" style="margin-top:16px;background:var(--pink);color:var(--on)"
       onclick="logoutAsk()">Logout</button>
   `;
+}
+
+async function simpanProfilAdmin() {
+  const nama = $("namaAdmin").value.trim();
+  const password = $("passwordAdmin").value;
+  const konfirmasi = $("konfirmasiPasswordAdmin").value;
+
+  if (!nama) {
+    toast("Nama tidak boleh kosong.");
+    return;
+  }
+
+  if (password && password.length < 6) {
+    toast("Password minimal 6 karakter.");
+    return;
+  }
+
+  if (password !== konfirmasi) {
+    toast("Konfirmasi password tidak cocok.");
+    return;
+  }
+
+  try {
+    const data = await api("/api/admin/profil", {
+      method: "PUT",
+      body: JSON.stringify({
+        nama,
+        password: password || undefined
+      })
+    });
+
+    user.nama = data.data.nama;
+    sessionStorage.setItem("user", JSON.stringify(user));
+
+    toast("Profil berhasil diperbarui.");
+    render();
+
+  } catch (error) {
+    toast(error.message);
+  }
 }
 
 function logoutAsk() {

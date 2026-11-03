@@ -3,10 +3,12 @@ const token = sessionStorage.getItem("token");
 let user = JSON.parse(sessionStorage.getItem("user") || "null");
 
 const $ = (id) => document.getElementById(id);
+
 const MN = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
 ];
+
 const HR = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
 const C = {
@@ -24,7 +26,8 @@ const S = {
   tahun: new Date().getFullYear(),
   foto: null,
   jenisPresensi: null,
-  kameraStream: null
+  kameraStream: null,
+  previewUrl: null
 };
 
 if (!token || !user || user.role !== "karyawan") {
@@ -84,6 +87,12 @@ function sheet(content) {
 
 function close_() {
   hentikanKamera();
+
+  if (S.previewUrl) {
+    URL.revokeObjectURL(S.previewUrl);
+    S.previewUrl = null;
+  }
+
   $("sheetBg").classList.remove("open");
 }
 
@@ -100,19 +109,11 @@ function tanggalJakarta() {
   }).format(new Date());
 }
 
-function jamJakarta() {
-  return new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Jakarta",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  }).format(new Date());
-}
-
 function tanggalFormat(value) {
   if (!value) return "-";
 
   const date = new Date(value);
+
   return new Intl.DateTimeFormat("id-ID", {
     timeZone: "UTC",
     day: "numeric",
@@ -121,18 +122,10 @@ function tanggalFormat(value) {
   }).format(date);
 }
 
-function tanggalPendek(value) {
-  const date = new Date(value);
-
-  return new Intl.DateTimeFormat("id-ID", {
-    timeZone: "UTC",
-    day: "numeric",
-    month: "short"
-  }).format(date);
-}
-
-function formatJam(value) {
+function jamDariData(value) {
   if (!value) return "-";
+
+  if (/^\d{2}:\d{2}/.test(value)) return value.slice(0, 5);
 
   return new Intl.DateTimeFormat("id-ID", {
     timeZone: "Asia/Jakarta",
@@ -140,14 +133,6 @@ function formatJam(value) {
     minute: "2-digit",
     hour12: false
   }).format(new Date(value));
-}
-
-function jamDariData(value) {
-  if (!value) return "-";
-
-  if (/^\d{2}:\d{2}/.test(value)) return value.slice(0, 5);
-
-  return formatJam(value);
 }
 
 function tanggalHariIni(item) {
@@ -213,11 +198,13 @@ async function home() {
   const tombolMasuk = !today;
   const tombolPulang = sudahMasuk && !sudahPulang;
 
-  const minggu = [];
   const hariIni = new Date(`${tanggalJakarta()}T00:00:00`);
   const hari = hariIni.getDay();
   const senin = new Date(hariIni);
+
   senin.setDate(hariIni.getDate() - (hari === 0 ? 6 : hari - 1));
+
+  const minggu = [];
 
   for (let i = 0; i < 6; i++) {
     const tanggal = new Date(senin);
@@ -229,7 +216,9 @@ async function home() {
       String(tanggal.getDate()).padStart(2, "0")
     ].join("-");
 
-    const record = S.riwayat.find((item) => tanggalHariIni(item) === key);
+    const record = S.riwayat.find(
+      (item) => tanggalHariIni(item) === key
+    );
 
     minggu.push({
       nama: HR[tanggal.getDay()],
@@ -237,11 +226,9 @@ async function home() {
     });
   }
 
-  const hariIniStatus = today?.status || null;
-
   minggu.push({
     nama: HR[hariIni.getDay()],
-    status: hariIniStatus
+    status: today?.status || null
   });
 
   return `
@@ -267,6 +254,7 @@ async function home() {
     </div>
 
     <h2>Minggu ini</h2>
+
     <div class="bx card" style="padding:14px">
       <div class="wk">
         ${minggu.map((item) => `
@@ -280,7 +268,7 @@ async function home() {
   `;
 }
 
-async function cam(jenis) {
+function cam(jenis) {
   S.jenisPresensi = jenis;
   S.foto = null;
 
@@ -297,30 +285,33 @@ async function cam(jenis) {
         style="width:100%;height:230px;object-fit:cover;border-radius:16px;display:none">
 
       <div id="kameraPlaceholder" class="em">📷</div>
-      <p id="petunjukFoto">Ambil foto selfie untuk presensi ${jenis}.</p>
+
+      <p id="petunjukFoto">
+        Buka kamera untuk mengambil foto selfie presensi ${jenis}.
+      </p>
     </div>
 
-    <input id="inputFoto" type="file" accept="image/jpeg,image/png" capture="user" hidden
-      onchange="pilihFoto(event)">
-
-    <div class="seg2" style="margin-top:16px">
-      <button class="bx" onclick="bukaKamera()">Buka Kamera</button>
-      <button class="bx" onclick="$('inputFoto').click()">Pilih Foto</button>
-    </div>
+    <button class="bx btn" id="tombolKamera" style="margin-top:16px"
+        onclick="bukaKamera()">
+        Buka Kamera
+    </button>
 
     <button id="kirimFoto" class="bx btn" style="margin-top:14px"
-      disabled onclick="kirimPresensi()">Kirim Presensi</button>
+      disabled onclick="kirimPresensi()">
+      Kirim Presensi
+    </button>
 
     <button class="bx btn alt" style="margin-top:10px"
-      onclick="close_()">Batal</button>
+      onclick="close_()">
+      Batal
+    </button>
   `);
 }
 
 async function bukaKamera() {
   try {
     if (!navigator.mediaDevices?.getUserMedia) {
-      $("inputFoto").click();
-      return;
+      throw new Error("Browser membutuhkan HTTPS untuk membuka kamera.");
     }
 
     hentikanKamera();
@@ -335,18 +326,16 @@ async function bukaKamera() {
     const video = $("videoKamera");
     video.srcObject = stream;
     video.style.display = "block";
+
     $("previewFoto").style.display = "none";
     $("kameraPlaceholder").style.display = "none";
     $("petunjukFoto").textContent = "Posisikan wajah dengan jelas, lalu ambil foto.";
 
-    const tombol = $("kirimFoto");
-    tombol.disabled = false;
+    const tombol = $("tombolKamera");
     tombol.textContent = "Ambil Foto";
-
     tombol.onclick = ambilFotoKamera;
   } catch (error) {
-    toast("Kamera tidak tersedia. Silakan pilih foto.");
-    $("inputFoto").click();
+    toast(error.message || "Kamera tidak dapat dibuka. Periksa izin kamera.");
   }
 }
 
@@ -375,47 +364,48 @@ function ambilFotoKamera() {
       type: "image/jpeg"
     });
 
+    hentikanKamera();
     tampilkanPreview();
   }, "image/jpeg", 0.9);
 }
 
-function pilihFoto(event) {
-  const file = event.target.files[0];
-
-  if (!file) return;
-
-  if (!["image/jpeg", "image/png"].includes(file.type)) {
-    toast("Foto harus berformat JPG atau PNG.");
-    event.target.value = "";
-    return;
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    toast("Ukuran foto maksimal 2 MB.");
-    event.target.value = "";
-    return;
-  }
-
-  S.foto = file;
-  hentikanKamera();
-  tampilkanPreview();
-}
-
 function tampilkanPreview() {
   const preview = $("previewFoto");
-  const video = $("videoKamera");
 
-  preview.src = URL.createObjectURL(S.foto);
+  if (S.previewUrl) {
+    URL.revokeObjectURL(S.previewUrl);
+  }
+
+  S.previewUrl = URL.createObjectURL(S.foto);
+  preview.src = S.previewUrl;
   preview.style.display = "block";
-  video.style.display = "none";
 
+  $("videoKamera").style.display = "none";
   $("kameraPlaceholder").style.display = "none";
   $("petunjukFoto").textContent = "Periksa foto sebelum mengirim presensi.";
 
-  const tombol = $("kirimFoto");
-  tombol.disabled = false;
-  tombol.textContent = "Kirim Presensi";
-  tombol.onclick = kirimPresensi;
+  $("tombolKamera").textContent = "Ambil Ulang";
+  $("tombolKamera").onclick = ulangFoto;
+
+  $("kirimFoto").disabled = false;
+}
+
+function ulangFoto() {
+  S.foto = null;
+
+  if (S.previewUrl) {
+    URL.revokeObjectURL(S.previewUrl);
+    S.previewUrl = null;
+  }
+
+  $("previewFoto").style.display = "none";
+  $("kameraPlaceholder").style.display = "block";
+  $("petunjukFoto").textContent = "Buka kamera untuk mengambil foto selfie.";
+
+  $("tombolKamera").textContent = "Buka Kamera";
+  $("tombolKamera").onclick = bukaKamera;
+
+  $("kirimFoto").disabled = true;
 }
 
 function hentikanKamera() {
@@ -427,7 +417,7 @@ function hentikanKamera() {
 
 async function kirimPresensi() {
   if (!S.foto) {
-    toast("Foto selfie wajib disertakan.");
+    toast("Foto selfie wajib diambil.");
     return;
   }
 

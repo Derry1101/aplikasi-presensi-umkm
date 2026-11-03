@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node main/index.js",
     "test": "jest"
   },
   "jest": {
