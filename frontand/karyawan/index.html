@@ -1,24 +1,30 @@
-
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Presensi Karyawan</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/karyawan/style.css">
 </head>
 <body>
-  <div class="phone">
-    <div id="view"></div>
+  <div class="app">
+    <header class="top">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="9" fill="var(--red)"/>
+        <path d="m9 16.5 4.5 4.5L23 11" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <b>Presensi</b>
+      <span id="topTitle"></span>
+    </header>
+
+    <main id="view"></main>
     <nav id="nav"></nav>
 
     <div id="sheetBg">
-      <div id="sheet"></div>
+      <div id="sheet" role="dialog" aria-modal="true"></div>
     </div>
-
-    <div id="toast"></div>
+    <div id="toast" role="status"></div>
   </div>
 
   <script src="/karyawan/app.js"></script>

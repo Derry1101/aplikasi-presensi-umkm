@@ -1,28 +1,34 @@
-
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F5F5F7">
+  <title>Login - Presensi</title>
 
-  <title>Login - Presensi UMKM</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/login/style.css">
 </head>
 <body>
-  <span class="blob b1" aria-hidden="true"></span>
-  <span class="blob b2" aria-hidden="true"></span>
 
   <main class="wrap">
-    <div class="logo" aria-hidden="true">📖</div>
 
-    <h1>Presensi UMKM</h1>
-    <p class="sub">Login dulu biar bisa absen</p>
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="9" fill="var(--red)"/>
+      <path d="m9 16.5 4.5 4.5L23 11"
+        stroke="#fff"
+        stroke-width="2.8"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+    </svg>
+
+    <h1>Selamat datang</h1>
+    <p class="sub">Masuk menggunakan akun yang diberikan admin.</p>
 
     <form id="loginForm" class="card" novalidate>
-      <label for="username">Username</label>
 
+      <label for="username">Username</label>
       <input
         id="username"
         name="username"
@@ -31,6 +37,7 @@
         autocapitalize="none"
         spellcheck="false"
         placeholder="Masukkan username"
+        required
       >
 
       <label for="password">Password</label>
@@ -42,6 +49,7 @@
           type="password"
           autocomplete="current-password"
           placeholder="Masukkan password"
+          required
         >
 
         <button
@@ -49,13 +57,34 @@
           id="toggle"
           class="eye"
           aria-label="Tampilkan password"
-        >👁️</button>
+        >
+          <svg class="on" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true">
+            <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+
+          <svg class="off" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true">
+            <path d="M3 3l18 18M10.6 5.7A10 10 0 0 1 12 5.5C18.4 5.5 22 12 22 12a17 17 0 0 1-3.2 4M6.2 7.3A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.5 0 2.8-.3 4-.8M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+          </svg>
+        </button>
       </div>
 
       <p id="error" class="error" role="alert" aria-live="polite"></p>
 
-      <button type="submit" id="btn" class="btn">Login</button>
+      <button type="submit" id="btn" class="btn">
+        Login
+      </button>
+
     </form>
+
+    <p class="foot">Lupa password? Hubungi admin.</p>
+
   </main>
 
   <script src="/login/login.js"></script>

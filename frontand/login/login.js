@@ -1,4 +1,3 @@
-
 const TUJUAN = {
   admin: "/admin/",
   karyawan: "/karyawan/"
@@ -11,6 +10,7 @@ const userEl = $("username");
 const passEl = $("password");
 const errEl = $("error");
 const btn = $("btn");
+const toggle = $("toggle");
 
 function showError(message, ...fields) {
   errEl.textContent = message;
@@ -20,17 +20,27 @@ function showError(message, ...fields) {
   });
 }
 
-$("toggle").addEventListener("click", () => {
+// Tampilkan / sembunyikan password
+toggle.addEventListener("click", () => {
   const sembunyi = passEl.type === "password";
 
   passEl.type = sembunyi ? "text" : "password";
 
-  $("toggle").setAttribute(
+  toggle.setAttribute(
     "aria-label",
     sembunyi ? "Sembunyikan password" : "Tampilkan password"
   );
 });
 
+// Hapus tanda error saat pengguna mulai mengetik
+[userEl, passEl].forEach((field) => {
+  field.addEventListener("input", () => {
+    field.classList.remove("invalid");
+    errEl.textContent = "";
+  });
+});
+
+// Proses login ke backend
 async function cekLogin(username, password) {
   let response;
 
@@ -40,7 +50,10 @@ async function cekLogin(username, password) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({
+        username,
+        password
+      })
     });
   } catch {
     throw new Error("Tidak dapat terhubung ke server.");
@@ -49,12 +62,15 @@ async function cekLogin(username, password) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || "Username atau password salah.");
+    throw new Error(
+      data.message || "Username atau password salah."
+    );
   }
 
   return data;
 }
 
+// Submit form login
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -67,10 +83,12 @@ form.addEventListener("submit", async (event) => {
       ...(!username ? [userEl] : []),
       ...(!password ? [passEl] : [])
     );
+
     return;
   }
 
   showError("");
+
   btn.disabled = true;
   btn.textContent = "Memproses...";
 
@@ -86,11 +104,13 @@ form.addEventListener("submit", async (event) => {
     sessionStorage.setItem("user", JSON.stringify(user));
 
     location.href = TUJUAN[user.role];
+
   } catch (error) {
     showError(error.message, userEl, passEl);
 
     btn.disabled = false;
     btn.textContent = "Login";
-    passEl.select();
+
+    passEl.focus();
   }
 });

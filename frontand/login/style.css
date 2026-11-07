@@ -1,47 +1,412 @@
-:root{
-  --bg:#F1ECFF; --card:#fff; --ink:#1B1530; --mut:#6B6490; --on:#1B1530;
-  --lime:#CFFF3D; --pink:#FF6FA8; --sky:#7FDCFF; --sun:#FFD84D; --lil:#C4B0FF;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+/* =========================
+   WARNA UTAMA
+========================= */
+
+:root {
+  --red: #C8102E;
+  --red-d: #A20D25;
+  --red-s: #FDECEF;
+
+  --bg: #F5F5F7;
+  --card: #FFFFFF;
+  --ink: #17171A;
+  --mut: #6E6E78;
+  --line: #E6E6EA;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){--bg:#14102A;--card:#221B40;--ink:#F3EFFF;--mut:#A79FCF}
+
+/* DARK MODE */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --red: #E5384F;
+    --red-d: #C92A40;
+    --red-s: #3A1A22;
+
+    --bg: #0F0F12;
+    --card: #1A1A1F;
+    --ink: #F2F2F5;
+    --mut: #9A9AA6;
+    --line: #2A2A31;
+  }
 }
-:root[data-theme="dark"]{--bg:#14102A;--card:#221B40;--ink:#F3EFFF;--mut:#A79FCF}
 
-*{box-sizing:border-box;margin:0;font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif}
-html,body{min-height:100%}
-body{background:var(--bg);color:var(--ink);display:grid;place-items:center;min-height:100dvh;padding:20px;overflow-x:hidden;position:relative}
-:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+:root[data-theme="dark"] {
+  --red: #E5384F;
+  --red-d: #C92A40;
+  --red-s: #3A1A22;
 
-/* dekorasi latar */
-.blob{position:fixed;z-index:0;border:2.5px solid var(--ink);border-radius:50%;pointer-events:none}
-.b1{width:180px;height:180px;background:var(--lil);top:-50px;right:-40px}
-.b2{width:130px;height:130px;background:var(--sun);bottom:-30px;left:-30px;border-radius:38%}
+  --bg: #0F0F12;
+  --card: #1A1A1F;
+  --ink: #F2F2F5;
+  --mut: #9A9AA6;
+  --line: #2A2A31;
+}
 
-.wrap{position:relative;z-index:1;width:min(100%,400px);text-align:center}
-.logo{width:84px;height:84px;margin:0 auto 14px;display:grid;place-items:center;font-size:44px;background:var(--lime);border:2.5px solid var(--ink);border-radius:26px;box-shadow:4px 4px 0 var(--ink);transform:rotate(-6deg)}
-h1{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
-.sub{color:var(--mut);margin:6px 0 24px}
+/* =========================
+   RESET
+========================= */
 
-.card{text-align:left;background:var(--card);border:2.5px solid var(--ink);border-radius:26px;box-shadow:4px 4px 0 var(--ink);padding:22px 20px}
-label{display:block;font-weight:600;margin:0 0 6px 2px}
-input{width:100%;padding:14px;border:2.5px solid var(--ink);border-radius:16px;background:var(--bg);color:var(--ink);font-size:16px;margin-bottom:16px}
-input::placeholder{color:var(--mut)}
-input.invalid{border-color:var(--pink);box-shadow:0 0 0 3px color-mix(in srgb,var(--pink) 35%,transparent)}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
 
-.pw{position:relative}
-.pw input{padding-right:52px}
-.eye{position:absolute;right:6px;top:5px;width:42px;height:42px;border:0;background:none;font-size:20px;cursor:pointer;border-radius:12px}
+html,
+body {
+  min-height: 100%;
+}
 
-.error{min-height:22px;margin:-4px 0 10px 2px;color:#D6336C;font-weight:600;font-size:14px}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .error{color:var(--pink)}}
-:root[data-theme="dark"] .error{color:var(--pink)}
+body {
+  background: var(--bg);
+  color: var(--ink);
 
-.btn{width:100%;padding:16px;font-size:18px;font-weight:800;color:var(--on);background:var(--lime);border:2.5px solid var(--ink);border-radius:20px;box-shadow:4px 4px 0 var(--ink);cursor:pointer;transition:transform .12s,box-shadow .12s}
-.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
-.btn:disabled{opacity:.6;cursor:wait;box-shadow:none}
+  display: grid;
+  place-items: center;
 
-.hint{margin-top:20px;font-size:13px;color:var(--mut)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  padding:
+    calc(20px + env(safe-area-inset-top, 0px))
+    20px
+    calc(20px + env(safe-area-inset-bottom, 0px));
+
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* =========================
+   BACKGROUND DECORATION
+========================= */
+
+body::before {
+  content: "";
+  position: fixed;
+
+  top: -120px;
+  right: -100px;
+
+  width: 320px;
+  height: 320px;
+
+  border-radius: 50%;
+
+  background: linear-gradient(
+    135deg,
+    var(--red),
+    var(--red-d)
+  );
+
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+
+  bottom: -140px;
+  left: -110px;
+
+  width: 300px;
+  height: 300px;
+
+  border-radius: 50%;
+
+  background: var(--red);
+  opacity: 0.07;
+
+  pointer-events: none;
+}
+
+/* =========================
+   ELEMENT DASAR
+========================= */
+
+button {
+  cursor: pointer;
+  color: inherit;
+  background: none;
+  border: 0;
+  font: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(
+    in srgb,
+    var(--red) 55%,
+    transparent
+  );
+
+  outline-offset: 2px;
+}
+
+/* =========================
+   CONTAINER LOGIN
+========================= */
+
+.wrap {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 400px;
+}
+
+/* =========================
+   LOGO DAN JUDUL
+========================= */
+
+.logo {
+  width: 56px;
+  height: 56px;
+
+  display: block;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.sub {
+  color: var(--mut);
+  font-size: 15px;
+  line-height: 1.6;
+
+  margin: 6px 0 24px;
+}
+
+/* =========================
+   CARD FORM
+========================= */
+
+.card {
+  background: var(--card);
+
+  border: 1px solid var(--line);
+  border-radius: 20px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+
+  padding: 22px 20px;
+}
+
+/* =========================
+   LABEL DAN INPUT
+========================= */
+
+label {
+  display: block;
+
+  font-weight: 600;
+  font-size: 14px;
+
+  margin: 0 0 6px 2px;
+}
+
+input {
+  display: block;
+  width: 100%;
+
+  padding: 14px;
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  background: var(--card);
+  color: var(--ink);
+
+  font-size: 16px;
+
+  margin-bottom: 16px;
+
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+input::placeholder {
+  color: var(--mut);
+  opacity: 0.8;
+}
+
+input:focus {
+  border-color: var(--red);
+  outline: none;
+
+  box-shadow: 0 0 0 3px color-mix(
+    in srgb,
+    var(--red) 22%,
+    transparent
+  );
+}
+
+input.invalid {
+  border-color: var(--red);
+
+  box-shadow: 0 0 0 3px color-mix(
+    in srgb,
+    var(--red) 22%,
+    transparent
+  );
+}
+
+/* =========================
+   PASSWORD
+========================= */
+
+.pw {
+  position: relative;
+  width: 100%;
+}
+
+.pw input {
+  padding-right: 52px;
+}
+
+.eye {
+  position: absolute;
+
+  right: 6px;
+  top: 4px;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--mut);
+
+  transition: color 0.15s;
+}
+
+.eye:hover {
+  color: var(--red);
+}
+
+.eye svg {
+  width: 20px;
+  height: 20px;
+}
+
+.eye .off {
+  display: none;
+}
+
+.eye[aria-label^="Sembunyikan"] .on {
+  display: none;
+}
+
+.eye[aria-label^="Sembunyikan"] .off {
+  display: block;
+}
+
+/* =========================
+   PESAN ERROR
+========================= */
+
+.error {
+  min-height: 20px;
+
+  margin: -6px 0 10px 2px;
+
+  color: var(--red);
+  font-weight: 600;
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   TOMBOL LOGIN
+========================= */
+
+.btn {
+  display: block;
+  width: 100%;
+
+  padding: 15px;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  color: #FFFFFF;
+  background: var(--red);
+
+  border-radius: 12px;
+
+  transition:
+    background 0.15s,
+    transform 0.15s,
+    opacity 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--red-d);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.foot {
+  margin-top: 20px;
+
+  font-size: 13px;
+  color: var(--mut);
+
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 480px) {
+  body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .wrap {
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 20px 18px;
+    border-radius: 18px;
+  }
+}
+
+@media (max-height: 600px) {
+  body {
+    place-items: start center;
+  }
+}
